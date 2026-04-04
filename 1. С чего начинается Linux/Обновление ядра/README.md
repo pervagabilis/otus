@@ -24,8 +24,7 @@
 sudo apt update
 sudo apt install openssh-server -y
 sudo systemctl enable --now ssh
-```
-```bash
+
 # узнаю IP интерфейса
 hostname -I
 192.168.1.8 fd91:1984:51c0:0:a00:27ff:fed1:9bc1
