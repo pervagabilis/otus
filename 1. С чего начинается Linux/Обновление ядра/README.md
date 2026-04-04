@@ -142,7 +142,7 @@ enoch@ubuntu-otus:~/kernel$ sudo dpkg -i *.deb
 done
 ```
 
-
+#### Успех!
 
 #### Проверяю, что ядро появилось в boot
 ```bash
@@ -152,8 +152,6 @@ lrwxrwxrwx  1 root root       29 Apr  4 18:21 vmlinuz -> vmlinuz-6.19.0-061900-g
 -rw-------  1 root root 15042952 Mar 13 17:46 vmlinuz-6.8.0-107-generic
 lrwxrwxrwx  1 root root       25 Apr  4 16:21 vmlinuz.old -> vmlinuz-6.8.0-107-generic
 ```
-
-#### Успех!
 
 ### 7. Обновляю конфигурацию загрузчика и выбираю загрузку нового ядра по-умолчанию
 ```bash
