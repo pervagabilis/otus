@@ -53,7 +53,7 @@ $ make olddefconfig
 `olddefconfig` автоматически ответит на все новые опции значениями по умолчанию
 
 #### Отключаю проверку подписей модулей
-В статьях их отключать, чтобы сборка не падала.
+В статьях рекомендуют отключать, чтобы сборка не падала.
 ```bash
 $ scripts/config --disable SYSTEM_TRUSTED_KEYS
 $ scripts/config --disable SYSTEM_REVOCATION_KEYS
@@ -128,8 +128,7 @@ tmpfs           794M   12K  794M   1% /run/user/1000
 Действительно кончилось.
 
 ##### Увеличение диска
-В VirtualBox увеличиваю размер виртуального диска до 100 Гб
-Потом внутри ВМ расширяю раздел с помощью утилиты cloud-guest-utils
+В VirtualBox увеличиваю размер виртуального диска до 100 Гб, потом внутри ВМ расширяю раздел с помощью утилиты cloud-guest-utils
 ```bash
 $ sudo apt install cloud-guest-utils
 $ sudo growpart /dev/sda 2
@@ -173,11 +172,15 @@ $ sudo reboot
 ### 5. ОШИБКА
 #### Диагностика
 После перезагрузки, система не стартанула и выпала в (initramfs).
+
 По какой-то причине ядро не видит диска, с которого надо загружаться.
+
 Исследование показало, что отсутствует драйвер SATA.
+
 Попытки вручную его подключить не привели ни к чему.
 
 Но я смог загрузиться с использованием старого ядра.
+
 Предполагаю, что прошлый процесс сборки завершился некорректно, поэтому попробую пересобрать ядро заново.
 
 #### Исправление
@@ -201,6 +204,7 @@ $ make clean
 
 ##### Источники
 Поискал новые актуальны источники, нашёл
+
 [https://www.kernel.org/doc/html/latest/admin-guide/README.html#](https://www.kernel.org/doc/html/latest/admin-guide/README.html#) 
 
 [https://canonical-kernel-docs.readthedocs-hosted.com/latest/how-to/develop-customise/build-kernel/](https://canonical-kernel-docs.readthedocs-hosted.com/latest/how-to/develop-customise/build-kernel/)
@@ -211,13 +215,17 @@ $ make clean
 ```bash
 # удаляю папку с исходниками
 rm -rf linux-6.19.11
+
 # проверяю, что все необходимые пакеты установлены
 sudo apt install build-essential libncurses-dev bison flex libssl-dev libelf-dev dwarves bc llvm dkms
+
 # распаковываю архив с исходниками
 tar xvf linux-6.19.11.tar.xz
 cd linux-6.19.11/
-# очищаю от предыдущей установки
+
+# очищаю от остатков предыдущей сборки
 make mrproper
+
 # конфигурирую
 make olddefconfig
 scripts/config --disable SYSTEM_TRUSTED_KEYS
@@ -230,6 +238,7 @@ make -j12
 
 # устанавливаю модули
 sudo make modules_install
+
 # устанавливаю ядро, загрузчик по идее должен обновиться сам
 $ sudo make install
   INSTALL /boot
@@ -271,4 +280,5 @@ $ uname -r
 
 ## Успех
 Ядро успешно собрано из исходников, система загрузилась корректно с новым ядром.
+
 Задание выполнено.
