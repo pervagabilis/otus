@@ -33,27 +33,32 @@ https://davidaugustat.com/linux/how-to-compile-linux-kernel-on-ubuntu
 $ sudo apt update
 $ sudo apt install build-essential libncurses-dev bison flex libssl-dev libelf-dev bc dwarves
 ```
+
 #### Скачиваю исходники ядра версии `6.9.11` с kernel.org
 ```bash
 $ wget https://cdn.kernel.org/pub/linux/kernel/v6.x/linux-6.19.11.tar.xz
 ```
+
 #### Распаковываю их в папку
 ```bash
 $ tar xvf linux-6.19.11.tar.xz
 $ cd linux-6.19.11/
 ```
+
 #### Создаю конфиг на основании текущей системы
 ```bash
 $ cp /boot/config-$(uname -r) .config
 $ make olddefconfig
 ```
 `olddefconfig` автоматически ответит на все новые опции значениями по умолчанию
+
 #### Отключаю проверку подписей модулей
 В статьях их отключать, чтобы сборка не падала.
 ```bash
 $ scripts/config --disable SYSTEM_TRUSTED_KEYS
 $ scripts/config --disable SYSTEM_REVOCATION_KEYS
 ```
+
 ### 2. Сборка
 #### Просто запускаю команду сборки
 Для ускорения сборки указываю количество используемых для сборки ядер с помощью параметра `-j` 
@@ -61,6 +66,7 @@ $ scripts/config --disable SYSTEM_REVOCATION_KEYS
 ```bash
 $ make -j12
 ```
+
 #### После запуска запросил ответа на некоторые параметры
 ```bash
 make
@@ -77,6 +83,7 @@ Provide system-wide ring of revocation certificates (SYSTEM_REVOCATION_LIST) [Y/
     X.509 certificates to be preloaded into the system blacklist keyring (SYSTEM_REVOCATION_KEYS) [] (NEW)
 # просто нажал Enter
 ```
+
 ##### Погуглил, это можно было пропустить, сразу задав следующие строки:
 ```bash
 $ scripts/config --set-str CONFIG_SYSTEM_TRUSTED_KEYS ""
@@ -84,16 +91,20 @@ $ scripts/config --set-str CONFIG_SYSTEM_REVOCATION_KEYS ""
 ```
 #### Процесс пошёл
 2026-04-04 23:38 - Началась
+
 2026-04-05 00:23 - Увидел, что закончилась
+
 #### Сборка модулей ядра
 ```bash
 $ make modules -j12
 ```
+
 ### 3. Установка
 #### Установка модулей ядра
 ```bash
 $ sudo make modules_install
 ```
+
 #### 3.1 **ОШИБКА**
 ##### В процессе установки модулей ядра вылезла ошибка
 ```bash
@@ -115,6 +126,7 @@ tmpfs           5.0M     0  5.0M   0% /run/lock
 tmpfs           794M   12K  794M   1% /run/user/1000
 ```
 Действительно кончилось.
+
 ##### Увеличение диска
 В VirtualBox увеличиваю размер виртуального диска до 100 Гб
 Потом внутри ВМ расширяю раздел с помощью утилиты cloud-guest-utils
@@ -131,15 +143,18 @@ tmpfs           3.9G     0  3.9G   0% /dev/shm
 tmpfs           5.0M     0  5.0M   0% /run/lock
 tmpfs           794M   12K  794M   1% /run/user/1000
 ```
+
 ##### Ещё одна попытка
 ```bash
 $ sudo make modules_install
 ```
+
 #### Модули ядра успешно установились
 #### Установка ядра
 ```bash
 $ sudo make install
 ```
+
 ### 4. Проверка
 #### Проверяю, что ядро появилось в /boot
 ```bash
@@ -149,11 +164,14 @@ lrwxrwxrwx  1 root root        15 Apr  4 22:59 vmlinuz -> vmlinuz-6.19.11
 -rw-------  1 root root  15042952 Mar 13 17:46 vmlinuz-6.8.0-107-generic
 lrwxrwxrwx  1 root root        25 Apr  4 19:52 vmlinuz.old -> vmlinuz-6.8.0-107-generic
 ```
+
 #### Перезагрузка и проверка используемого ядра
 ```bash
 $ sudo reboot
 ```
+
 ### 5. ОШИБКА
+#### Диагностика
 После перезагрузки, система не стартанула и выпала в (initramfs).
 По какой-то причине ядро не видит диска, с которого надо загружаться.
 Исследование показало, что отсутствует драйвер SATA.
@@ -162,7 +180,8 @@ $ sudo reboot
 Но я смог загрузиться с использованием старого ядра.
 Предполагаю, что прошлый процесс сборки завершился некорректно, поэтому попробую пересобрать ядро заново.
 
-#### Сначала очищаю файлы предыдущей сборки
+#### Исправление
+##### Сначала очищаю файлы предыдущей сборки
 ```bash
 $ cd linux-6.19.11/
 $ make clean
@@ -179,7 +198,8 @@ $ sudo rm -d ./arch/x86_64/boot
 $ make clean
   CLEAN   modules.builtin modules.builtin.modinfo vmlinux.unstripped .vmlinux.objs .vmlinux.export.c
 ```
-#### Источники
+
+##### Источники
 Поискал новые актуальны источники, нашёл
 [https://www.kernel.org/doc/html/latest/admin-guide/README.html#](https://www.kernel.org/doc/html/latest/admin-guide/README.html#) 
 
@@ -187,7 +207,7 @@ $ make clean
 
 Решил действовать по актуальной инструкции по сборке из исходных кодов.
 
-#### Начинаю сборку заново
+##### Начинаю сборку заново
 ```bash
 # удаляю папку с исходниками
 rm -rf linux-6.19.11
@@ -207,4 +227,48 @@ scripts/config --set-str CONFIG_SYSTEM_REVOCATION_KEYS ""
 
 # запускаю сборку заново и жду
 make -j12
+
+# устанавливаю модули
+sudo make modules_install
+# устанавливаю ядро, загрузчик по идее должен обновиться сам
+$ sudo make install
+  INSTALL /boot
+run-parts: executing /etc/kernel/postinst.d/dkms 6.19.11 /boot/vmlinuz-6.19.11
+ * dkms: running auto installation service for kernel 6.19.11
+ * dkms: autoinstall for kernel 6.19.11                                                         [ OK ]
+run-parts: executing /etc/kernel/postinst.d/initramfs-tools 6.19.11 /boot/vmlinuz-6.19.11
+update-initramfs: Generating /boot/initrd.img-6.19.11
+run-parts: executing /etc/kernel/postinst.d/unattended-upgrades 6.19.11 /boot/vmlinuz-6.19.11
+run-parts: executing /etc/kernel/postinst.d/update-notifier 6.19.11 /boot/vmlinuz-6.19.11
+run-parts: executing /etc/kernel/postinst.d/xx-update-initrd-links 6.19.11 /boot/vmlinuz-6.19.11
+run-parts: executing /etc/kernel/postinst.d/zz-update-grub 6.19.11 /boot/vmlinuz-6.19.11
+Sourcing file `/etc/default/grub'
+Generating grub configuration file ...
+Found linux image: /boot/vmlinuz-6.19.11
+Found initrd image: /boot/initrd.img-6.19.11
+Found linux image: /boot/vmlinuz-6.19.11.old
+Found initrd image: /boot/initrd.img-6.19.11
+Found linux image: /boot/vmlinuz-6.8.0-107-generic
+Found initrd image: /boot/initrd.img-6.8.0-107-generic
+Warning: os-prober will not be executed to detect other bootable partitions.
+Systems on them will not be added to the GRUB boot configuration.
+Check GRUB_DISABLE_OS_PROBER documentation entry.
+Adding boot menu entry for UEFI Firmware Settings ...
+done
 ```
+
+Вроде бы прошло успешно, перезагружаюсь:
+```bash
+sudo reboot
+```
+
+### 6. Ещё одна проверка
+Система успешно загрузилась, без ошибок. Проверяю версию ядра.
+```bash
+$ uname -r
+6.19.11
+```
+
+## Успех
+Ядро успешно собрано из исходников, система загрузилась корректно с новым ядром.
+Задание выполнено.
