@@ -1,3 +1,5 @@
 .obsidian
+.vscode
+*.pdf
 Методичка.md
 disk_raid_commands-224190-c93eaf.sh
