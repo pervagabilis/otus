@@ -35,19 +35,16 @@
 - Хостовая машина на Windows 11.
 - VirtualBox версии 7.2.6 r172322 (Qt6.8.0 on windows)
 - Виртуальная машина с Ubuntu Server 24.04.2
-  - 2 ядра
-  - 2 Гб ОЗУ
-  - 64 Гб виртуальный диск
-  - 8 виртуальных дисков по 512 Мб
 
 ## Выполнение
 
-### 1. Подготовка
+### 1. Подготовка, Vagrant
 
 Установлю Vagrant для Windows 11, для этого скачиваю MSI с сайта. Устанавливаю. Перезагружаюсь.
 VBox у меня уже есть, для удобства добавлю его в системный PATH.
 
 Проверяю, что всё присутствует на хостовой системе.
+
 ```powershell
 PS R:\DEV\education\otus> vagrant --version
 Vagrant 2.4.9
@@ -56,61 +53,14 @@ PS R:\DEV\education\otus> VBoxManage --version
 ```
 
 Сначала проваливаюсь в директорию для виртуалки `> cd R:\DEV\education\otus\4. ZFS\vm\`, в ней создаю  файл конфигурации для Vagrant.
+
 ```Vagrantfile
-# Vagrantfile — для домашнего задания по ZFS
-Vagrant.configure("2") do |config|
-  config.vm.box = "hashicorp-education/ubuntu-24-04"
-  config.vm.hostname = "otus"
-
-  config.vm.network "private_network", type: "dhcp"
-
-# настрою пользователя и пароль
-  config.ssh.username = 'zfs'
-  config.ssh.password = 'zfs'
-  config.ssh.keys_only = false
-
-  config.vm.provider "virtualbox" do |vb|
-    vb.memory = "8192"
-    vb.cpus = 4
-    vb.name = "zfs-homework"
-  end
-
-  (1..8).each do |i|
-    config.vm.disk :disk, name: "zfs-disk-#{i}", size: "512MB"
-  end
-
-  config.vm.provision "shell", inline: <<-SHELL
-    echo "vagrant ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers.d/vagrant
-    apt-get update
-    apt-get install -y zfsutils-linux wget curl
-  SHELL
-end
-```
-
-
-Поднимаю машину командой `vagrant up`, получаю ошибку при конфигурировании.
-```powershell
-==> default: Clearing any previously set network interfaces...
-A host only network interface you're attempting to configure via DHCP
-already has a conflicting host only adapter with DHCP enabled. The
-DHCP on this adapter is incompatible with the DHCP settings. Two
-host only network interfaces are not allowed to overlap, and each
-host only network interface can have only one DHCP server. Please
-reconfigure your host only network or remove the virtual machine
-using the other host only network.
-```
-
-Выясняю, что настройка адаптера конфликтует с текущей host-only сетью и её диапазоном.
-
-Переделываю на сетевой мост.
-```Vagrantfile
-# Vagrantfile — для домашнего задания по ZFS
 Vagrant.configure("2") do |config|
   config.vm.box = "hashicorp-education/ubuntu-24-04"
   # имя ВМ - otus
   config.vm.hostname = "otus"
 
-  # сетевой мост с интерфейсом Ethernet
+  # сетевой мост к интерфейсу Ethernet
   config.vm.network "public_network", bridge: "Ethernet"
 
   # отключаю вход только по ключам
@@ -146,15 +96,17 @@ Vagrant.configure("2") do |config|
 end
 ```
 
-Теперь уничтожаю предыдущее состояние и поднимаю заново
+Поднимаю машину командой `vagrant up`
+
 ```powershell
-vagrant destroy -f && vagrant up
+PS R:\DEV\education\otus\4. ZFS\vm\> vagrant up
 ```
 
-Так как у меня нет адаптера под именем Ethernet, Vagrant предлагает мне выбрать из существующих, какой забриджить.
+Оказалось, что мой адаптер называется не Ethernet, Vagrant предлагает мне выбрать из существующих.
 
 Выбираю 1, мой основной.
-```bash
+
+```powershell
 PS R:\DEV\education\otus\4. ZFS\vm> vagrant up
 Bringing machine 'default' up with 'virtualbox' provider...
 ==> default: Importing base box 'hashicorp-education/ubuntu-24-04'...
