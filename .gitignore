@@ -7,3 +7,5 @@ README_template.md
 *.ps1
 .vagrant
 *.msi
+README_template.md
+.gitignore
