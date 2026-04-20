@@ -1,0 +1,40 @@
+# Vagrantfile — для домашнего задания по ZFS
+Vagrant.configure("2") do |config|
+  config.vm.box = "hashicorp-education/ubuntu-24-04"
+  # имя ВМ - otus
+  config.vm.hostname = "otus"
+
+  # сетевой мост с интерфейсом Ethernet
+  config.vm.network "public_network", bridge: "Ethernet"
+
+  # отключаю вход только по ключам
+  config.ssh.keys_only = false
+
+  config.vm.provider "virtualbox" do |vb|
+    vb.memory = "8192"
+    vb.cpus = 4
+    vb.name = "otus"
+  end
+
+  (1..8).each do |i|
+    config.vm.disk :disk, name: "zfs-disk-#{i}", size: "512MB"
+  end
+
+  config.vm.provision "shell", inline: <<-SHELL
+    echo "vagrant ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers.d/vagrant
+    # создаём пользователя enoch с паролем enoch
+    useradd -m -s /bin/bash enoch
+    echo 'enoch:enoch' | chpasswd
+    # разрешаем выполнение команд без пароля
+    echo 'enoch ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/enoch
+
+    # разрешаем вход по паролю через SSH
+    sed -i 's/^#*PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config
+    sed -i 's/^#*KbdInteractiveAuthentication.*/KbdInteractiveAuthentication yes/' /etc/ssh/sshd_config
+    systemctl restart ssh
+
+    # устанавливаю zfsutils в систему
+    apt-get update
+    apt-get install -y zfsutils-linux wget curl
+  SHELL
+end

@@ -3,3 +3,7 @@
 *.pdf
 Методичка.md
 disk_raid_commands-224190-c93eaf.sh
+README_template.md
+*.ps1
+.vagrant
+*.msi
