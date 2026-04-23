@@ -1,0 +1,84 @@
+Vagrant.configure("2") do |config|
+  # нашёл в примерах
+  config.vm.box = "hashicorp-education/ubuntu-24-04"
+  # Не проверять обновления в сети (для offline-стенда)
+  config.vm.box_check_update = false
+  # отключаю вход только по ключам
+  config.ssh.keys_only = false
+
+  # подготавливаю сервер NFS
+  config.vm.define "nfs-server" do |s|
+    s.vm.hostname = "nfs-server"
+    s.vm.network "private_network", ip: "192.168.56.10"
+    s.vm.provider "virtualbox" do |vb|
+      vb.memory = "4096"
+      vb.cpus = 4
+      vb.name = "nfs-server"
+    end
+
+    s.vm.provision "shell", inline: <<-SHELL
+      echo "vagrant ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers.d/vagrant
+      # создаём пользователя enoch с паролем enoch
+      useradd -m -s /bin/bash enoch
+      echo 'enoch:enoch' | chpasswd
+      # разрешаем выполнение команд без пароля
+      echo 'enoch ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/enoch
+
+      # разрешаем вход по паролю через SSH
+      sed -i 's/^#*PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config
+      sed -i 's/^#*KbdInteractiveAuthentication.*/KbdInteractiveAuthentication yes/' /etc/ssh/sshd_config
+      systemctl restart ssh
+
+      # устанавливаю nfs-сервер в систему
+      apt update
+      apt install -y nfs-kernel-server
+
+      # создаю и настраиваю необходимую директорию
+      mkdir -p /srv/share/upload
+      chown -R nobody:nogroup /srv/share
+      chmod 0777 /srv/share/upload
+
+      # в файле /etc/exports прописываю структуру для последующего экспорта директории
+      cat << EOF > /etc/exports 
+/srv/share 192.168.56.20/32(rw,sync,root_squash)
+EOF
+
+      # экспортирую ранее созданную директорию
+      exportfs -r
+    SHELL
+  end
+
+  config.vm.define "nfs-client" do |c|
+    c.vm.hostname = "nfs-client"
+    c.vm.network "private_network", ip: "192.168.56.20"
+    c.vm.provider "virtualbox" do |vb|
+      vb.memory = "4096"
+      vb.cpus = 4
+      vb.name = "nfs-client"
+    end
+
+    c.vm.provision "shell", inline: <<-SHELL
+      echo "vagrant ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers.d/vagrant
+      # создаём пользователя enoch с паролем enoch
+      useradd -m -s /bin/bash enoch
+      echo 'enoch:enoch' | chpasswd
+      # разрешаем выполнение команд без пароля
+      echo 'enoch ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/enoch
+
+      # разрешаем вход по паролю через SSH
+      sed -i 's/^#*PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config
+      sed -i 's/^#*KbdInteractiveAuthentication.*/KbdInteractiveAuthentication yes/' /etc/ssh/sshd_config
+      systemctl restart ssh
+
+      # устанавливаю nfs-клиент в систему
+      apt update
+      apt install -y nfs-common
+
+      echo "192.168.56.10:/srv/share/ /mnt nfs vers=3,noauto,x-systemd.automount 0 0" >> /etc/fstab
+      systemctl daemon-reload
+      systemctl restart remote-fs.target
+      cd /mnt
+    SHELL
+  end
+
+end

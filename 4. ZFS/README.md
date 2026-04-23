@@ -54,7 +54,7 @@ PS R:\DEV\education\otus> VBoxManage --version
 
 Сначала проваливаюсь в директорию для виртуалки `> cd R:\DEV\education\otus\4. ZFS\vm\`, в ней создаю  файл конфигурации для Vagrant.
 
-```Vagrantfile
+```vagrantfile
 Vagrant.configure("2") do |config|
   config.vm.box = "hashicorp-education/ubuntu-24-04"
   # имя ВМ - otus
