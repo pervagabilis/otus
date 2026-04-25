@@ -107,7 +107,7 @@ root@nfs-client:~# apt install nfs-common
 
 После чего добавлю в `fstab` строку для автомонтирования.
 ```bash
-root@nfs-client:~# echo "192.168.50.10:/srv/share/ /mnt nfs vers=3,noauto,x-systemd.automount 0 0" >> /etc/fstab
+root@nfs-client:~# echo "192.168.56.10:/srv/share/ /mnt nfs vers=3,noauto,x-systemd.automount 0 0" >> /etc/fstab
 ```
 
 Выполняю команды
