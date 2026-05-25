@@ -1,0 +1,17 @@
+Vagrant.configure("2") do |config|
+  config.vm.box = "bento/ubuntu-24.04"
+  config.vm.box_url = "file:///C:/DEV/otus/_boxes/bento-ubuntu-24.04.box"
+  config.vm.box_check_update = false
+  config.ssh.keys_only = false
+
+  config.vm.hostname = "otus-hw08"
+  config.vm.network "private_network", ip: "192.168.56.10"
+
+  config.vm.disk :disk, size: "10GB", primary: true
+
+  config.vm.provider "virtualbox" do |vb|
+    vb.cpus = 4
+    vb.memory = "8192"
+    vb.name = "otus-hw08"
+  end
+end
