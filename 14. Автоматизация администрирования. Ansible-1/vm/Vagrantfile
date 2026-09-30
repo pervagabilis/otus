@@ -1,0 +1,17 @@
+# Стенд под KVM/libvirt на рабочей станции ubuntu-otus.
+# Исходный Vagrantfile курса (VirtualBox, generic/ubuntu2204, intnet 192.168.11.150) — в Методичка.md.
+Vagrant.configure("2") do |config|
+  config.vm.box = "cloud-image/ubuntu-24.04"
+  config.vm.box_check_update = false
+  config.vm.synced_folder ".", "/vagrant", disabled: true
+
+  config.vm.define "nginx" do |box|
+    box.vm.hostname = "nginx"
+    box.vm.network "private_network", ip: "192.168.56.150"
+
+    box.vm.provider "libvirt" do |lv|
+      lv.cpus = 1
+      lv.memory = 1024
+    end
+  end
+end
