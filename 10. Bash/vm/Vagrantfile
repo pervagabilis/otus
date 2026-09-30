@@ -1,0 +1,27 @@
+# Стенд под KVM/libvirt на рабочей станции ubuntu-otus.
+Vagrant.configure("2") do |config|
+  config.vm.box = "cloud-image/ubuntu-24.04"
+  config.vm.box_check_update = false
+  config.vm.synced_folder ".", "/vagrant", disabled: true
+
+  config.vm.hostname = "otus-hw10"
+  config.vm.network "private_network", ip: "192.168.56.10"
+
+  config.vm.provider "libvirt" do |lv|
+    lv.cpus = 1
+    lv.memory = 1024
+  end
+
+  config.vm.provision "file", source: "../web-report.sh", destination: "/tmp/web-report.sh"
+  config.vm.provision "file", source: "../web-report.cron", destination: "/tmp/web-report.cron"
+  config.vm.provision "file", source: "../access-4560-644067.log", destination: "/tmp/access.log"
+
+  config.vm.provision "shell", inline: <<-SHELL
+    set -e
+    install -m 755 /tmp/web-report.sh /usr/local/bin/web-report.sh
+    install -m 644 /tmp/web-report.cron /etc/cron.d/web-report
+    # Учебный лог из задания, будет подаваться в access.log частями
+    install -m 644 /tmp/access.log /home/vagrant/access-sample.log
+    mkdir -p /var/log/nginx
+  SHELL
+end
