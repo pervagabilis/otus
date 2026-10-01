@@ -1,0 +1,21 @@
+# Стенд под KVM/libvirt на рабочей станции ubuntu-otus.
+Vagrant.configure("2") do |config|
+  config.vm.box = "cloud-image/ubuntu-24.04"
+  config.vm.box_check_update = false
+  config.vm.synced_folder ".", "/vagrant", disabled: true
+
+  config.vm.hostname = "otus-hw15"
+  config.vm.network "forwarded_port", guest: 80, host: 8080
+
+  config.vm.provider "libvirt" do |lv|
+    lv.cpus = 2
+    lv.memory = 1024
+    lv.machine_virtual_size = 10
+    lv.default_prefix = "otus-hw15_"
+
+    lv.storage :file, :size => '1G'
+    lv.storage :file, :size => '1G'
+  end
+
+  config.vm.provision "shell", path: "provision.sh"
+end
