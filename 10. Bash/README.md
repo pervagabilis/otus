@@ -17,7 +17,7 @@
 
 ## Окружение
 
-- Хостовая машина: Ubuntu 24.04 (рабочая станция `ubuntu-otus`).
+- Хостовая машина: Ubuntu 24.04
 - KVM/libvirt 10.0.0, QEMU 8.2.2
 - Vagrant 2.4.9, плагин `vagrant-libvirt` 0.12.2
   - Vagrant box: `cloud-image/ubuntu-24.04`.
