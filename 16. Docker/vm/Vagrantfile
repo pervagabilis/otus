@@ -1,16 +1,19 @@
-# Стенд под KVM/libvirt на рабочей станции ubuntu-otus.
 Vagrant.configure("2") do |config|
-  config.vm.box = "cloud-image/ubuntu-24.04"
+  config.vm.box = "bento/ubuntu-24.04"
+  config.vm.box_url = "file:///C:/DEV/otus/_boxes/bento-ubuntu-24.04.box"
   config.vm.box_check_update = false
+  config.ssh.keys_only = false
   config.vm.synced_folder ".", "/vagrant", disabled: true
 
   config.vm.hostname = "otus-hw16"
+  config.vm.network "private_network", ip: "192.168.56.10"
   config.vm.network "forwarded_port", guest: 8080, host: 8080
 
-  config.vm.provider "libvirt" do |lv|
-    lv.cpus = 2
-    lv.memory = 2048
-    lv.machine_virtual_size = 20
-    lv.default_prefix = "otus-hw16_"
+  config.vm.disk :disk, size: "20GB", primary: true
+
+  config.vm.provider "virtualbox" do |vb|
+    vb.cpus = 2
+    vb.memory = "2048"
+    vb.name = "otus-hw16"
   end
 end
