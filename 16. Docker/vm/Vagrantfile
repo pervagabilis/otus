@@ -1,6 +1,9 @@
+# Box берётся из _boxes/ в корне репозитория; путь считается от этого файла и переживает перенос репозитория.
+BOX_FILE = File.expand_path("../../_boxes/bento-ubuntu-24.04.box", __dir__)
+
 Vagrant.configure("2") do |config|
   config.vm.box = "bento/ubuntu-24.04"
-  config.vm.box_url = "file:///C:/DEV/otus/_boxes/bento-ubuntu-24.04.box"
+  config.vm.box_url = "file:///#{BOX_FILE}"
   config.vm.box_check_update = false
   config.ssh.keys_only = false
   config.vm.synced_folder ".", "/vagrant", disabled: true
